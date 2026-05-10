@@ -2,6 +2,9 @@
 name = "cargo-size-of"
 version = "0.1.0"
 edition = "2024"
+repository = "https://github.com/akiramusic000/cargo-size-of"
+license-file = "LICENSE"
+description = "Cargo tool to find the size of a struct. (Written by AI)"
 
 [dependencies]
 anyhow = "1.0.102"
