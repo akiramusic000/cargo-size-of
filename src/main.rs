@@ -5,7 +5,7 @@ use cargo_metadata::MetadataCommand;
 use clap::Parser;
 use std::fs;
 use std::io::Write;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use tempfile::Builder;
 
 #[derive(Parser)]
@@ -83,19 +83,21 @@ fn main() -> anyhow::Result<()> {
     let example_name = temp_file.path().file_stem().unwrap().to_str().unwrap();
 
     // 4. Execute Cargo Run
-    let status = Command::new("cargo")
+    let output = Command::new("cargo")
         .arg("run")
         .arg("--quiet")
+        .arg("--color=always")
         .arg("--example")
         .arg(example_name)
         .arg("-p")
         .arg(&*package.name)
-        .status()?;
+        .stdout(Stdio::inherit())
+        .output()?;
+
+    let status = output.status;
 
     if !status.success() {
-        eprintln!(
-            "\nError: Could not compute size. Ensure the type is public and the package compiles."
-        );
+        eprint!("{}", String::from_utf8(output.stderr)?);
     }
 
     drop(temp_file);
