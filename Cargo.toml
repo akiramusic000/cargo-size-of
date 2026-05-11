@@ -10,5 +10,6 @@ description = "Cargo tool to find the size of a struct. (Written by AI)"
 anyhow = "1.0.102"
 cargo_metadata = "0.23.1"
 clap = { version = "4.6.1", features = ["derive"] }
+colored = "3.1.1"
 copy_dir = "0.1.3"
 tempfile = "3.27.0"

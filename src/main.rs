@@ -1,8 +1,8 @@
 //! Written by AI.
 
-use anyhow::{anyhow, bail};
 use cargo_metadata::MetadataCommand;
 use clap::Parser;
+use colored::Colorize;
 use std::fs;
 use std::io::Write;
 use std::process::{Command, Stdio};
@@ -26,6 +26,8 @@ struct SizeOfArgs {
 }
 
 fn main() -> anyhow::Result<()> {
+    let error = "error".bright_red();
+
     // Cargo passes the subcommand name as the first argument, so we parse it nested
     let CargoCli::SizeOf(args) = CargoCli::parse();
 
@@ -34,20 +36,36 @@ fn main() -> anyhow::Result<()> {
 
     // 2. Determine target package
     let package = if let Some(pkg_name) = args.package {
-        metadata
-            .packages
-            .iter()
-            .find(|p| p.name == pkg_name)
-            .ok_or_else(|| anyhow!("Package '{}' not found in workspace", pkg_name))?
+        let Some(package) = metadata.packages.iter().find(|p| p.name == pkg_name) else {
+            eprintln!(
+                "{error}: package `{pkg_name}` not found in workspace `{}`",
+                metadata.workspace_root,
+            );
+            return Ok(());
+        };
+
+        package
     } else {
         // Fallback to the package in the current working directory
-        metadata
-            .root_package()
-            .ok_or(anyhow!("error: `cargo size-of` could not determine which package to modify. Use the `--package` option to specify a package.\navailable packages: {}", metadata.workspace_default_packages().iter().map(|pkg| &**pkg.name).collect::<Vec<_>>().join(", ")))?
+        let Some(package) = metadata.root_package() else {
+            eprintln!(
+                "{error}: `cargo size-of` could not determine which package to modify. Use the `--package` option to specify a package.\navailable packages: {}",
+                metadata
+                    .workspace_default_packages()
+                    .iter()
+                    .map(|pkg| &**pkg.name)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+            return Ok(());
+        };
+
+        package
     };
 
     if !package.targets.iter().any(|target| target.is_lib()) {
-        bail!("error: `cargo-size-of` must be run on a package with a lib target!");
+        eprintln!("{error}: a lib target must be available for `cargo size-of`");
+        return Ok(());
     }
 
     let pkg_dir = package.manifest_path.parent().unwrap();
