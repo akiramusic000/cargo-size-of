@@ -43,7 +43,7 @@ fn main() -> anyhow::Result<()> {
         // Fallback to the package in the current working directory
         metadata
             .root_package()
-            .ok_or(anyhow!("error: `cargo size-of` could not determine which package to modify. Use the `--package` option to specify a package.\navailable packages: {}", metadata.packages.iter().map(|pkg| &**pkg.name).collect::<Vec<_>>().join(", ")))?
+            .ok_or(anyhow!("error: `cargo size-of` could not determine which package to modify. Use the `--package` option to specify a package.\navailable packages: {}", metadata.workspace_default_packages().iter().map(|pkg| &**pkg.name).collect::<Vec<_>>().join(", ")))?
     };
 
     if !package.targets.iter().any(|target| target.is_lib()) {
